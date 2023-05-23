@@ -10,12 +10,11 @@ from dataclasses import dataclass
 
 import kaggle
 from dotenv import load_dotenv
-load_dotenv("../../.env")
 
 @dataclass
 class DataIngestionConfig:
-    train_data_path:str = os.path.join(TRANSFORMED_DATA_DIR,'train.csv')
-    test_data_path:str = os.path.join(TRANSFORMED_DATA_DIR,'test.csv')
+    train_data_path:str = os.path.join(RAW_DATA_DIR,'train.csv')
+    test_data_path:str = os.path.join(RAW_DATA_DIR,'test.csv')
     raw_data_path:str = os.path.join(RAW_DATA_DIR,'data.csv')
     
 
@@ -27,12 +26,13 @@ class DataIngestion:
         logging.info("Entered the data ingestion method or component")
         try:
             logging.info('Download data from kagle API')
-            ##load_dotenv("../../.env")
+            load_dotenv("../../.env")
             dataset_name = 'spscientist/students-performance-in-exams'
             kaggle.api.dataset_download_files(dataset_name,path=RAW_DATA_DIR,unzip=True)
             
             logging.info('Read the dataset as dataframe')
             df=pd.read_csv(f'{RAW_DATA_DIR}/StudentsPerformance.csv')
+            df.columns = [col.replace(" ","_").replace("/","_") for col in df.columns]
             os.makedirs(os.path.dirname(self.ingestion_config.train_data_path),exist_ok=True)
             df.to_csv(self.ingestion_config.raw_data_path,index=False,header=True)
 
@@ -48,7 +48,3 @@ class DataIngestion:
             
         except Exception as e:
             raise CustomException(e,sys)
-
-if __name__=="__main__":
-    obj=DataIngestion()
-    train_data,test_data=obj.initiate_data_ingestion()
